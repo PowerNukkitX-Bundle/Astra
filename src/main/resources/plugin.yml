@@ -1,0 +1,4 @@
+name: Astra
+api: 3.0.0
+main: org.powernukkitx.anticheat.AntiCheatPlugin
+version: 0.0.1-DEV
