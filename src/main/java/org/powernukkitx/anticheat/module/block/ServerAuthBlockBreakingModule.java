@@ -13,6 +13,8 @@ import org.powernukkitx.anticheat.AntiCheatPlugin;
 import org.powernukkitx.anticheat.module.Module;
 import org.powernukkitx.anticheat.module.ModuleType;
 import org.powernukkitx.anticheat.player.AntiCheatPlayer;
+import org.powernukkitx.anticheat.player.PlayerTimeStats;
+import org.powernukkitx.anticheat.util.ViolationId;
 
 /**
  * @author Kaooot
@@ -57,9 +59,25 @@ public class ServerAuthBlockBreakingModule extends Module {
         if (!(event.getPacket() instanceof PlayerActionPacket packet)) {
             return;
         }
-        System.out.println(packet);
-        if (packet.getAction().equals(PlayerActionType.CONTINUE_DESTROY_BLOCK)) {
-            System.out.println(packet.getAction());
+        if (!packet.getAction().equals(PlayerActionType.CREATIVE_DESTROY_BLOCK)) {
+            return;
+        }
+        final Optional<AntiCheatPlayer> optional = this.plugin.getPlayerRegistry().getPlayer(
+            event.getPlayer().getUniqueId()
+        );
+        if (optional.isEmpty()) {
+            return;
+        }
+        final AntiCheatPlayer player = optional.get();
+        if (!player.getServerPlayer().isCreative()) {
+            player.updateTimeStatistic(
+                PlayerTimeStats.LAST_INVALID_CREATIVE_DESTROY_ACTION, System.currentTimeMillis(),
+                -1, this.plugin.getServer().getTick()
+            );
+            player.sendViolationWarning(
+                ViolationId.INVALID_CREATIVE_DESTROY_ACTION,
+                player.getName() + " failed creative block destroy"
+            );
         }
     }
 

@@ -31,6 +31,7 @@ import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
 import org.powernukkitx.anticheat.AntiCheatPlugin;
+import org.powernukkitx.anticheat.util.ViolationId;
 
 /**
  * @author Kaooot
@@ -52,6 +53,8 @@ public class AntiCheatPlayer {
     private int clientStartedBreakTick;
     private int lastClientPredictedBreakTick;
     private int destroyTicks;
+    private long clientStartDestroyFrame;
+    private long clientPredictDestroyFrame;
 
     public AntiCheatPlayer(Player serverPlayer, AntiCheatPlugin plugin) {
         this.serverPlayer = serverPlayer;
@@ -87,6 +90,12 @@ public class AntiCheatPlayer {
         return this.serverPlayer.getUniqueId();
     }
 
+    public float distance(Vector3i blockPos) {
+        return blockPos.distance(this.serverPlayer.getFloorX(),
+            (int) (this.serverPlayer.getBaseOffset() + this.serverPlayer.getFloorY()),
+            this.serverPlayer.getFloorZ());
+    }
+
     public void updateTimeStatistic(String identifier, long serverTick) {
         this.updateTimeStatistic(identifier, -1, serverTick);
     }
@@ -112,32 +121,94 @@ public class AntiCheatPlayer {
 
     public void processBlockBreak(PlayerAuthInputPacket packet) {
         for (final PlayerBlockActionData playerAction : packet.getPlayerActions()) {
-            this.handleBlockBreak(playerAction);
+            this.handleBlockBreak(playerAction, packet);
         }
     }
 
-    private void handleBlockBreak(PlayerBlockActionData data) {
-        System.out.println(data);
+    public void sendViolationWarning(ViolationId id, String message) {
+        final String idValue = id.name().toLowerCase();
+        final PlayerTimeStats stats = this.getTimeStatistic(idValue);
+        if (System.currentTimeMillis() < stats.getTimeInMS() + this.plugin.getMainConfig()
+            .getViolationWarningInterval()) {
+            return;
+        }
+        this.updateTimeStatistic(idValue, System.currentTimeMillis(), -1, -1);
+
+        final String additionalInfo = "§fTick: " + this.plugin.getServer().getTick() +
+            "§f, TPS: §6" + this.plugin.getServer().getTicksPerSecond() +
+            "§f, TpsAvg: §6" + this.plugin.getServer().getTicksPerSecondAverage() +
+            "§f, Ping: §6" + this.serverPlayer.getPing() + " ms";
+        message += " §7(" + additionalInfo + "§7)";
+
+        this.plugin.getLogger().warning("Violation: " + message);
+
+        final boolean shouldKick = this.plugin.getMainConfig().getKickValueOverrides()
+            .getBoolean(id);
+
+        if (shouldKick) {
+            this.serverPlayer.kick("AntiCheat violation ID: " + id.name(), false);
+        }
+
+        if (!this.plugin.getMainConfig().isBroadcastViolationWarnings()) {
+            return;
+        }
+        final String permission = this.plugin.getMainConfig()
+            .getViolationBroadcastReceivePermission();
+        for (final Player player : this.plugin.getServer().getOnlinePlayers().values()) {
+            if (!player.hasPermission(permission)) {
+                continue;
+            }
+            player.sendMessage("§7[§cAstra§7] §f" + message);
+        }
+    }
+
+    private void handleBlockBreak(PlayerBlockActionData data, PlayerAuthInputPacket packet) {
+//        System.out.println(packet.getPlayerActions());
         // ignore sword block breaking actions when in creative
         if (this.serverPlayer.getInventory().getItemInMainHand().isSword() &&
             this.serverPlayer.isCreative()) {
             return;
         }
-        this.handleBlockIntentChange(data.getBlockPosition(), data.getFace());
+        final Vector3i blockPos = data.getBlockPosition();
+        final long lastInvalidCreativeDestroyAction = this.getTimeStatistic(
+            PlayerTimeStats.LAST_INVALID_CREATIVE_DESTROY_ACTION
+        ).getTimeInMS();
+        if (System.currentTimeMillis() - lastInvalidCreativeDestroyAction < 100L) {
+            this.sendDestroyCorrection(blockPos);
+            return;
+        }
+        final float maxDistance = this.serverPlayer.isCreative() ?
+            this.plugin.getMainConfig().getMaxBlockBreakDistanceCreative() :
+            this.plugin.getMainConfig().getMaxBlockBreakDistance();
+        final float distance = this.distance(blockPos);
+//        System.out.println("distance: " + distance + ", max: " + maxDistance);
+        if (distance > maxDistance) {
+            this.sendDestroyCorrection(blockPos);
+            final float inappropriateDistance = maxDistance * 1.5f;
+            if (distance > inappropriateDistance) {
+                this.sendViolationWarning(
+                    ViolationId.INAPPROPRIATE_BLOCK_INTERACTION_RANGE,
+                    this.getName() + " failed inappropriate block interaction, " +
+                        "range: " + inappropriateDistance
+                );
+            }
+            return;
+        }
+        this.handleBlockIntentChange(blockPos, data.getFace(), packet);
         switch (data.getAction()) {
-            case START_DESTROY_BLOCK -> this.startDestroyBlock(data);
-            case CONTINUE_DESTROY_BLOCK -> this.continueDestroyBlock(data);
-            case PREDICT_DESTROY_BLOCK -> this.predictDestroyBlock(data);
+            case START_DESTROY_BLOCK -> this.startDestroyBlock(data, packet);
+            case CONTINUE_DESTROY_BLOCK -> this.continueDestroyBlock(data, packet);
+            case PREDICT_DESTROY_BLOCK -> this.predictDestroyBlock(data, packet);
             case ABORT_DESTROY_BLOCK -> this.abortDestroyBlock(data);
         }
         this.lastPlayerBlockAction = data;
     }
 
-    private void startDestroyBlock(PlayerBlockActionData data) {
-        this.startDestroyBlock(data.getBlockPosition(), data.getFace());
+    private void startDestroyBlock(PlayerBlockActionData data, PlayerAuthInputPacket packet) {
+        this.startDestroyBlock(data.getBlockPosition(), data.getFace(), packet);
     }
 
-    private void startDestroyBlock(Vector3i blockPos, int face) {
+    private void startDestroyBlock(Vector3i blockPos, int face, PlayerAuthInputPacket packet) {
         final BlockFace blockFace = BlockFace.fromIndex(face);
         if (this.hasBlockBreakIntent()) {
             return;
@@ -217,6 +288,7 @@ public class AntiCheatPlayer {
         this.intendedToBreakBlock = block;
         this.intendedToBreakBlockFace = blockFace;
         this.clientStartedBreakTick = this.plugin.getServer().getTick();
+        this.clientStartDestroyFrame = packet.getClientTick();
     }
 
     /**
@@ -225,15 +297,16 @@ public class AntiCheatPlayer {
      *
      * @param data the {@link org.cloudburstmc.protocol.bedrock.data.PlayerBlockActionData}
      */
-    private void continueDestroyBlock(PlayerBlockActionData data) {
+    private void continueDestroyBlock(PlayerBlockActionData data, PlayerAuthInputPacket packet) {
         if (this.lastPlayerBlockAction != null &&
             this.lastPlayerBlockAction.getAction()
                 .equals(PlayerActionType.PREDICT_DESTROY_BLOCK)) {
             //  this.resetBlockDestructionData();
-            this.startDestroyBlock(data);
+            this.startDestroyBlock(data, packet);
             this.clientStartedBreakTick = this.lastClientPredictedBreakTick;
             this.destroyTicks = this.plugin.getServer().getTick() -
                 this.lastClientPredictedBreakTick;
+            this.clientStartDestroyFrame = this.clientPredictDestroyFrame;
         }
     }
 
@@ -256,6 +329,9 @@ public class AntiCheatPlayer {
             );
         }
         if (this.destroyTicks >= breakTime) {
+            /*System.out.println(
+                "Break block server authoritatively " + this.intendedToBreakBlock.asBlockVector3()
+            );*/
             this.breakBlock(
                 this.intendedToBreakBlock.asBlockVector3(), this.intendedToBreakBlockFace
             );
@@ -266,20 +342,21 @@ public class AntiCheatPlayer {
      * Handles a client block destruction prediction and validates it against the server predicted
      * break time
      */
-    private void predictDestroyBlock(PlayerBlockActionData data) {
+    private void predictDestroyBlock(PlayerBlockActionData data, PlayerAuthInputPacket packet) {
         this.lastClientPredictedBreakTick = this.plugin.getServer().getTick();
         final Vector3i blockPos = data.getBlockPosition();
         final Vector3 pos = Vector3.fromNetwork(blockPos.toFloat());
-        if (this.intendedToBreakBlock == null) {
-            this.sendDestroyCorrection(this.getLevel().getBlock(pos));
-            return;
-        }
         this.sendAbortBreakParticles(blockPos);
+        this.clientPredictDestroyFrame = packet.getClientTick();
+        final long frames = this.clientPredictDestroyFrame - this.clientStartDestroyFrame;
         final int serverPredictedBreakTime = this.getBreakTimeTicks(pos);
-        if (this.destroyTicks < serverPredictedBreakTime) {
+        if (serverPredictedBreakTime - frames > serverPredictedBreakTime *
+            this.plugin.getMainConfig().getBlockBreakProgressOffset()) {
             this.sendDestroyCorrection(this.getLevel().getBlock(pos));
             return;
         }
+        /*System.out.println("frames: " + frames);
+        System.out.println("serverPredictedBreakTime: " + serverPredictedBreakTime);*/
         this.breakBlock(pos.asBlockVector3(), BlockFace.fromIndex(data.getFace()));
     }
 
@@ -374,7 +451,8 @@ public class AntiCheatPlayer {
      * @param blockPos the block position which is targeted
      * @param face     the relevant block face
      */
-    private void handleBlockIntentChange(Vector3i blockPos, int face) {
+    private void handleBlockIntentChange(Vector3i blockPos, int face,
+                                         PlayerAuthInputPacket packet) {
         final PlayerBlockActionData lastAction = this.lastPlayerBlockAction;
         final BlockVector3 lastBreakPos = lastAction == null ? null :
             BlockVector3.fromNetwork(lastAction.getBlockPosition());
@@ -391,7 +469,7 @@ public class AntiCheatPlayer {
                 );
             }
             this.abortDestroyBlock(lastBreakPos.toNetwork());
-            this.startDestroyBlock(blockPos, face);
+            this.startDestroyBlock(blockPos, face, packet);
         }
     }
 
@@ -424,6 +502,12 @@ public class AntiCheatPlayer {
             e.printStackTrace();
         }
         return this.playerHandle;
+    }
+
+    private void sendDestroyCorrection(Vector3i blockPos) {
+        this.sendDestroyCorrection(
+            this.getLevel().getBlock(BlockVector3.fromNetwork(blockPos).asVector3())
+        );
     }
 
     private void sendDestroyCorrection(Block block) {

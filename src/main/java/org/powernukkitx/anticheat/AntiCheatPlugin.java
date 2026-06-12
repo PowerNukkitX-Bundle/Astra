@@ -3,6 +3,8 @@ package org.powernukkitx.anticheat;
 import cn.nukkit.plugin.PluginBase;
 import lombok.Getter;
 import org.powernukkitx.anticheat.config.MainConfig;
+import org.powernukkitx.anticheat.listener.PlayerHackDetectedListener;
+import org.powernukkitx.anticheat.listener.PlayerInvalidMoveListener;
 import org.powernukkitx.anticheat.listener.PlayerJoinListener;
 import org.powernukkitx.anticheat.listener.PlayerQuitListener;
 import org.powernukkitx.anticheat.module.ModuleRegistry;
@@ -28,5 +30,7 @@ public class AntiCheatPlugin extends PluginBase {
 
         this.getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         this.getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
+        this.getServer().getPluginManager().registerEvents(new PlayerInvalidMoveListener(), this);
+        this.getServer().getPluginManager().registerEvents(new PlayerHackDetectedListener(), this);
     }
 }

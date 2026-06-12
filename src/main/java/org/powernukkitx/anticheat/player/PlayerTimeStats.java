@@ -16,6 +16,8 @@ public class PlayerTimeStats {
     public static final String LAST_CLIENT_MOVE_PREDICTION_SYNC =
         "last_client_move_prediction_sync";
     public static final String LAST_PLAYER_AUTH_INPUT = "last_player_auth_input";
+    public static final String LAST_INVALID_CREATIVE_DESTROY_ACTION =
+        "last_invalid_creative_destroy_action";
 
     private long timeInMS;
     private long clientFrame;
