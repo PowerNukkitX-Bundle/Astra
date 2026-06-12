@@ -40,7 +40,9 @@ public class ModuleRegistry {
                 this.modulesByType.computeIfAbsent(module.getType(),
                     moduleType -> new ObjectOpenHashSet<>()).add(module);
                 this.plugin.getServer().getPluginManager().registerEvents(module, this.plugin);
+                this.plugin.getLogger().info("Loaded " + module.getName() + " module");
             }
+            this.plugin.getLogger().info("Loaded " + this.registry.size() + " modules");
         } catch (IOException | InvocationTargetException | InstantiationException |
                  IllegalAccessException | NoSuchMethodException e) {
             e.printStackTrace();

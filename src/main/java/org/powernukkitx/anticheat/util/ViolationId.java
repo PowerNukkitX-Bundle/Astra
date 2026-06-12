@@ -9,7 +9,8 @@ import lombok.Getter;
 public enum ViolationId {
 
     INVALID_CREATIVE_DESTROY_ACTION(true),
-    INAPPROPRIATE_BLOCK_INTERACTION_RANGE(true);
+    INAPPROPRIATE_BLOCK_INTERACTION_RANGE(true),
+    INVALID_MINE_ABILITY_STATE(false);
 
     ViolationId() {
         this.shouldKick = false;

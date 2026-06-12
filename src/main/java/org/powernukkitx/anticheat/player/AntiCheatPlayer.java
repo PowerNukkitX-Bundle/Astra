@@ -23,6 +23,7 @@ import java.util.UUID;
 import lombok.Getter;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.AbilitiesIndex;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.cloudburstmc.protocol.bedrock.data.PlayerActionType;
 import org.cloudburstmc.protocol.bedrock.data.PlayerBlockActionData;
@@ -140,7 +141,7 @@ public class AntiCheatPlayer {
             "§f, Ping: §6" + this.serverPlayer.getPing() + " ms";
         message += " §7(" + additionalInfo + "§7)";
 
-        this.plugin.getLogger().warning("Violation: " + message);
+        this.plugin.getLogger().warning(message);
 
         final boolean shouldKick = this.plugin.getMainConfig().getKickValueOverrides()
             .getBoolean(id);
@@ -175,6 +176,14 @@ public class AntiCheatPlayer {
         ).getTimeInMS();
         if (System.currentTimeMillis() - lastInvalidCreativeDestroyAction < 100L) {
             this.sendDestroyCorrection(blockPos);
+            return;
+        }
+        if (!this.serverPlayer.getAdventureSettings().get(AbilitiesIndex.MINE)) {
+            this.sendDestroyCorrection(blockPos);
+            this.sendViolationWarning(
+                ViolationId.INVALID_MINE_ABILITY_STATE,
+                this.getName() + " failed mine ability state change"
+            );
             return;
         }
         final float maxDistance = this.serverPlayer.isCreative() ?
