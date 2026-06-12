@@ -6,7 +6,7 @@
 
     <groupId>org.powernukkitx</groupId>
     <artifactId>Astra</artifactId>
-    <version>0.0.1-DEV</version>
+    <version>0.0.2-DEV</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

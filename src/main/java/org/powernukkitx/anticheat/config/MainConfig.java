@@ -31,8 +31,17 @@ public class MainConfig {
     private float maxBlockBreakDistanceCreative = 6.0f;
     private float blockBreakProgressOffset = 0.35f;
 
-    private float maxActorInteractionRange = 3.0f;
+    // Reach
+    private float maxActorInteractionRange = 4.0f;
     private float maxActorInteractionRangeCreative = 5.0f;
+    private float actorInteractionRangeLimit = 3.0f;
+    private float maxActorAttackRange = 6.0f;
+    private float maxActorAttackRangeCreative = 7.0f;
+    private float actorAttackRangeLimit = 5.0f;
+
+    // Auto Clicker
+    private int maxClicksPerSecond = 20;
+    private int cpsLimit = 10;
 
     public void init() {
         final Config config = new Config(
@@ -57,24 +66,61 @@ public class MainConfig {
         defaults.put("max_block_break_distance_creative", this.maxBlockBreakDistanceCreative);
         defaults.put("block_break_progress_offset", this.blockBreakProgressOffset);
 
+        defaults.put("max_actor_interaction_range", this.maxActorInteractionRange);
+        defaults.put("max_actor_interaction_range_creative", this.maxActorInteractionRangeCreative);
+        defaults.put("actor_interaction_range_limit", this.actorInteractionRangeLimit);
+        defaults.put("max_actor_attack_range", this.maxActorAttackRange);
+        defaults.put("max_actor_attack_range_creative", this.maxActorAttackRangeCreative);
+        defaults.put("actor_attack_range_limit", this.actorAttackRangeLimit);
+        defaults.put("max_cps", this.maxClicksPerSecond);
+        defaults.put("cps_limit", this.cpsLimit);
+
         config.setDefault(defaults);
         config.save();
 
-        this.violationWarningInterval = config.getInt("violation_warning_interval_ms");
-        this.broadcastViolationWarnings = config.getBoolean("broadcast_violation_warnings");
+        this.violationWarningInterval = config.getLong(
+            "violation_warning_interval_ms", this.violationWarningInterval
+        );
+        this.broadcastViolationWarnings = config.getBoolean(
+            "broadcast_violation_warnings", this.broadcastViolationWarnings
+        );
         this.violationBroadcastReceivePermission = config.getString(
-            "violation_broadcast_receive_permission"
+            "violation_broadcast_receive_permission", this.violationBroadcastReceivePermission
         );
         for (final ViolationId value : ViolationId.values()) {
             this.kickValueOverrides.put(
                 value,
-                config.getBoolean(value.name().toLowerCase() + "_should_kick")
+                config.getBoolean(value.name().toLowerCase() + "_should_kick", value.isShouldKick())
             );
         }
-        this.maxBlockBreakDistance = (float) config.getDouble("max_block_break_distance");
-        this.maxBlockBreakDistanceCreative = (float) config.getDouble(
-            "max_block_break_distance_creative"
+        this.maxBlockBreakDistance = (float) config.getDouble(
+            "max_block_break_distance", this.maxBlockBreakDistance
         );
-        this.blockBreakProgressOffset = (float) config.getDouble("block_break_progress_offset");
+        this.maxBlockBreakDistanceCreative = (float) config.getDouble(
+            "max_block_break_distance_creative", this.maxBlockBreakDistanceCreative
+        );
+        this.blockBreakProgressOffset = (float) config.getDouble(
+            "block_break_progress_offset", this.blockBreakProgressOffset
+        );
+        this.maxActorInteractionRange = (float) config.getDouble(
+            "max_actor_interaction_range", this.maxActorInteractionRange
+        );
+        this.maxActorInteractionRangeCreative = (float) config.getDouble(
+            "max_actor_interaction_range_creative", this.maxActorInteractionRangeCreative
+        );
+        this.actorInteractionRangeLimit = (float) config.getDouble(
+            "actor_interaction_range_limit", this.actorInteractionRangeLimit
+        );
+        this.maxActorAttackRange = (float) config.getDouble(
+            "max_actor_attack_range", this.maxActorAttackRange
+        );
+        this.maxActorAttackRangeCreative = (float) config.getDouble(
+            "max_actor_attack_range_creative", this.maxActorAttackRangeCreative
+        );
+        this.actorAttackRangeLimit = (float) config.getDouble(
+            "actor_attack_range_limit", this.actorAttackRangeLimit
+        );
+        this.maxClicksPerSecond = config.getInt("max_cps", this.maxClicksPerSecond);
+        this.cpsLimit = config.getInt("cps_limit", this.cpsLimit);
     }
 }

@@ -57,6 +57,10 @@ public class AntiCheatPlayer {
     private long clientStartDestroyFrame;
     private long clientPredictDestroyFrame;
 
+    @Getter
+    private int actorAttackAttempts;
+    private int currentCpsTick;
+
     public AntiCheatPlayer(Player serverPlayer, AntiCheatPlugin plugin) {
         this.serverPlayer = serverPlayer;
         this.plugin = plugin;
@@ -72,6 +76,7 @@ public class AntiCheatPlayer {
         }
         this.plugin.getServer().getScheduler().scheduleRepeatingTask(() -> {
             this.tickBlockBreaking();
+            this.tickCpsCounter();
         }, 1);
     }
 
@@ -566,5 +571,17 @@ public class AntiCheatPlayer {
         packet.setPosition(blockPos.toFloat());
 
         this.getLevel().addChunkPacket(blockPos.getX() >> 4, blockPos.getZ() >> 4, packet);
+    }
+
+    private void tickCpsCounter() {
+        if (this.currentCpsTick % 20 == 0) {
+            this.actorAttackAttempts = 0;
+            this.currentCpsTick = 0;
+        }
+        this.currentCpsTick++;
+    }
+
+    public void increaseActorAttackAttempts() {
+        this.actorAttackAttempts++;
     }
 }

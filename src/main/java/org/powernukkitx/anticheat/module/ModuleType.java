@@ -6,5 +6,6 @@ package org.powernukkitx.anticheat.module;
 public enum ModuleType {
 
     MOVEMENT,
-    BLOCK_BREAKING
+    BLOCK_BREAKING,
+    COMBAT
 }
