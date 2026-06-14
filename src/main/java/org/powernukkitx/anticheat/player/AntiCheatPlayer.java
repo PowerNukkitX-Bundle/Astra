@@ -576,6 +576,16 @@ public class AntiCheatPlayer {
 
     private void tickCpsCounter() {
         if (this.currentCpsTick % 20 == 0) {
+            final int value = this.actorAttackAttempts;
+            final int maxCPS = this.plugin.getMainConfig().getMaxClicksPerSecond();
+            final boolean exceeded = value > maxCPS;
+            if (exceeded) {
+                this.sendViolationWarning(
+                    ViolationId.EXCEEDED_MAX_CPS, this.getName() +
+                        " exceeded the maximum Clicks Per Second, value: " + value +
+                        ", max: " + maxCPS
+                );
+            }
             this.actorAttackAttempts = 0;
             this.currentCpsTick = 0;
         }

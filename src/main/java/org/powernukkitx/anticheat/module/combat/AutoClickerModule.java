@@ -50,20 +50,11 @@ public class AutoClickerModule extends Module {
             );
             return;
         }
-        final int maxCPS = this.plugin.getMainConfig().getMaxClicksPerSecond();
         final int value = player.getActorAttackAttempts() + 1;
-        final boolean exceeded = value > maxCPS;
-        if (exceeded) {
-            player.sendViolationWarning(
-                ViolationId.EXCEEDED_MAX_CPS, player.getName() +
-                    " exceeded the maximum Clicks Per Second, value: " + value + ", max: " + maxCPS
-            );
-        }
         if (value > this.plugin.getMainConfig().getCpsLimit()) {
             event.setCancelled();
-        } else {
-            player.increaseActorAttackAttempts();
         }
+        player.increaseActorAttackAttempts();
     }
 
     @Override
