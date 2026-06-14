@@ -45,7 +45,8 @@ public class AntiCheatPlayer {
 
     private final Map<String, PlayerTimeStats> timeStatistics =
         new Object2ObjectOpenHashMap<>();
-    private final Map<BlockFace, LevelEvent> blockFaceMap = new Object2ObjectOpenHashMap<>();
+    private static final Map<BlockFace, LevelEvent> BLOCK_FACE_MAP =
+        new Object2ObjectOpenHashMap<>();
 
     private PlayerHandle playerHandle;
     private PlayerBlockActionData lastPlayerBlockAction;
@@ -61,11 +62,15 @@ public class AntiCheatPlayer {
     private int actorAttackAttempts;
     private int currentCpsTick;
 
-    public AntiCheatPlayer(Player serverPlayer, AntiCheatPlugin plugin) {
-        this.serverPlayer = serverPlayer;
-        this.plugin = plugin;
+    @Getter
+    private int chatAttempts;
+    private int currentChatTick;
+    @Getter
+    private int chatMessageCount;
+
+    static {
         for (final BlockFace value : BlockFace.values()) {
-            this.blockFaceMap.put(value, switch (value) {
+            BLOCK_FACE_MAP.put(value, switch (value) {
                 case DOWN -> LevelEvent.PARTICLE_BREAK_BLOCK_DOWN;
                 case UP -> LevelEvent.PARTICLE_BREAK_BLOCK_UP;
                 case NORTH -> LevelEvent.PARTICLE_BREAK_BLOCK_NORTH;
@@ -74,9 +79,15 @@ public class AntiCheatPlayer {
                 case WEST -> LevelEvent.PARTICLE_BREAK_BLOCK_WEST;
             });
         }
+    }
+
+    public AntiCheatPlayer(Player serverPlayer, AntiCheatPlugin plugin) {
+        this.serverPlayer = serverPlayer;
+        this.plugin = plugin;
         this.plugin.getServer().getScheduler().scheduleRepeatingTask(() -> {
             this.tickBlockBreaking();
             this.tickCpsCounter();
+            this.tickChatCounter();
         }, 1);
     }
 
@@ -173,7 +184,7 @@ public class AntiCheatPlayer {
         // ignore sword block breaking actions when in creative
         if (this.serverPlayer.getInventory() == null ||
             (this.serverPlayer.getInventory().getItemInMainHand().isSword() &&
-            this.serverPlayer.isCreative())) {
+                this.serverPlayer.isCreative())) {
             return;
         }
         final Vector3i blockPos = data.getBlockPosition();
@@ -339,7 +350,7 @@ public class AntiCheatPlayer {
                 blockPos.asBlockVector3().toNetwork()
             );
             this.sendCrackParticles(
-                this.blockFaceMap.get(this.intendedToBreakBlockFace),
+                this.BLOCK_FACE_MAP.get(this.intendedToBreakBlockFace),
                 this.intendedToBreakBlock
             );
         }
@@ -594,5 +605,23 @@ public class AntiCheatPlayer {
 
     public void increaseActorAttackAttempts() {
         this.actorAttackAttempts++;
+    }
+
+    public void increaseChatAttempts() {
+        this.chatAttempts++;
+    }
+
+    public void increaseChatMessageCount() {
+        this.chatMessageCount++;
+    }
+
+    private void tickChatCounter() {
+        if (this.currentChatTick % 20 == 0) {
+            this.chatAttempts = 0;
+        }
+        if (this.currentChatTick % 1200 == 0) {
+            this.chatMessageCount = 0;
+        }
+        this.currentChatTick++;
     }
 }

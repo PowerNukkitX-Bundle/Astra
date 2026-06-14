@@ -18,6 +18,7 @@ public class PlayerTimeStats {
     public static final String LAST_PLAYER_AUTH_INPUT = "last_player_auth_input";
     public static final String LAST_INVALID_CREATIVE_DESTROY_ACTION =
         "last_invalid_creative_destroy_action";
+    public static final String LAST_CHAT_MESSAGE_SENT = "last_chat_message_sent";
 
     private long timeInMS;
     private long clientFrame;

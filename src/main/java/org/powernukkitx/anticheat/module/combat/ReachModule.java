@@ -39,7 +39,7 @@ public class ReachModule extends Module {
         if (distance > maxRange) {
             antiCheatPlayer.sendViolationWarning(
                 ViolationId.EXCEEDED_ACTOR_INTERACTION_RANGE, player.getName() +
-                    " exceeded the allowed actor interaction range, value: " +
+                    " exceeded the max actor interaction range, value: " +
                     MathUtil.round(distance) + ", max: " + maxRange
             );
         }
@@ -66,7 +66,7 @@ public class ReachModule extends Module {
         if (distance > maxRange) {
             player.sendViolationWarning(
                 ViolationId.EXCEEDED_ACTOR_ATTACK_RANGE, player.getName() +
-                    " exceeded the allowed actor attack range, value: " +
+                    " exceeded the max actor attack range, value: " +
                     MathUtil.round(distance) + ", max: " + maxRange
             );
         }
