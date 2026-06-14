@@ -171,8 +171,9 @@ public class AntiCheatPlayer {
     private void handleBlockBreak(PlayerBlockActionData data, PlayerAuthInputPacket packet) {
 //        System.out.println(packet.getPlayerActions());
         // ignore sword block breaking actions when in creative
-        if (this.serverPlayer.getInventory().getItemInMainHand().isSword() &&
-            this.serverPlayer.isCreative()) {
+        if (this.serverPlayer.getInventory() == null ||
+            (this.serverPlayer.getInventory().getItemInMainHand().isSword() &&
+            this.serverPlayer.isCreative())) {
             return;
         }
         final Vector3i blockPos = data.getBlockPosition();
