@@ -1,6 +1,6 @@
 package org.powernukkitx.anticheat.config;
 
-import cn.nukkit.utils.Config;
+import org.powernukkitx.utils.Config;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;

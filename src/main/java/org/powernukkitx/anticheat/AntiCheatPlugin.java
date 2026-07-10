@@ -1,6 +1,6 @@
 package org.powernukkitx.anticheat;
 
-import cn.nukkit.plugin.PluginBase;
+import org.powernukkitx.plugin.PluginBase;
 import lombok.Getter;
 import org.powernukkitx.anticheat.config.MainConfig;
 import org.powernukkitx.anticheat.listener.PlayerHackDetectedListener;

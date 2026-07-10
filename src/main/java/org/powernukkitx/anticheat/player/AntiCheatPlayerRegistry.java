@@ -1,6 +1,6 @@
 package org.powernukkitx.anticheat.player;
 
-import cn.nukkit.Player;
+import org.powernukkitx.Player;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.Map;
 import java.util.Optional;

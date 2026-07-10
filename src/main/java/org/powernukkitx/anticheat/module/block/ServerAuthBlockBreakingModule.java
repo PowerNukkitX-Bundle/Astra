@@ -1,7 +1,7 @@
 package org.powernukkitx.anticheat.module.block;
 
-import cn.nukkit.event.EventHandler;
-import cn.nukkit.event.server.PacketReceiveEvent;
+import org.powernukkitx.event.EventHandler;
+import org.powernukkitx.event.server.PacketReceiveEvent;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;

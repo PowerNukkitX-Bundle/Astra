@@ -1,8 +1,8 @@
 package org.powernukkitx.anticheat.listener;
 
-import cn.nukkit.event.EventHandler;
-import cn.nukkit.event.Listener;
-import cn.nukkit.event.player.PlayerQuitEvent;
+import org.powernukkitx.event.EventHandler;
+import org.powernukkitx.event.Listener;
+import org.powernukkitx.event.player.PlayerQuitEvent;
 import lombok.RequiredArgsConstructor;
 import org.powernukkitx.anticheat.AntiCheatPlugin;
 

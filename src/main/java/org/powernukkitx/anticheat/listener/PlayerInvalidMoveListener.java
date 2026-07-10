@@ -1,7 +1,7 @@
 package org.powernukkitx.anticheat.listener;
 
-import cn.nukkit.event.Listener;
-import cn.nukkit.event.player.PlayerInvalidMoveEvent;
+import org.powernukkitx.event.Listener;
+import org.powernukkitx.event.player.PlayerInvalidMoveEvent;
 
 /**
  * @author Kaooot

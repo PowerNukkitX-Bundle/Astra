@@ -1,6 +1,6 @@
 package org.powernukkitx.anticheat.module;
 
-import cn.nukkit.event.Listener;
+import org.powernukkitx.event.Listener;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.powernukkitx.anticheat.AntiCheatPlugin;

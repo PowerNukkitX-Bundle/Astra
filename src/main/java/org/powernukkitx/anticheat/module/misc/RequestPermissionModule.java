@@ -1,7 +1,7 @@
 package org.powernukkitx.anticheat.module.misc;
 
-import cn.nukkit.event.EventHandler;
-import cn.nukkit.event.server.PacketReceiveEvent;
+import org.powernukkitx.event.EventHandler;
+import org.powernukkitx.event.server.PacketReceiveEvent;
 import java.util.Optional;
 import org.cloudburstmc.protocol.bedrock.packet.RequestPermissionsPacket;
 import org.powernukkitx.anticheat.AntiCheatPlugin;

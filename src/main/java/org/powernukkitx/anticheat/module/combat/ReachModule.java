@@ -1,9 +1,9 @@
 package org.powernukkitx.anticheat.module.combat;
 
-import cn.nukkit.Player;
-import cn.nukkit.event.EventHandler;
-import cn.nukkit.event.entity.EntityDamageByEntityEvent;
-import cn.nukkit.event.player.PlayerInteractEntityEvent;
+import org.powernukkitx.Player;
+import org.powernukkitx.event.EventHandler;
+import org.powernukkitx.event.entity.EntityDamageByEntityEvent;
+import org.powernukkitx.event.player.PlayerInteractEntityEvent;
 import java.util.Optional;
 import org.powernukkitx.anticheat.AntiCheatPlugin;
 import org.powernukkitx.anticheat.module.Module;
