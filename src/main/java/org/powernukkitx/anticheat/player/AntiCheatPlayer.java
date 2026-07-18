@@ -137,7 +137,7 @@ public class AntiCheatPlayer {
     }
 
     public void processBlockBreak(PlayerAuthInputPacket packet) {
-        for (final PlayerBlockActionData playerAction : packet.getPlayerActions()) {
+        for (final PlayerBlockActionData playerAction : packet.getPlayerBlockActions()) {
             this.handleBlockBreak(playerAction, packet);
         }
     }
@@ -180,7 +180,6 @@ public class AntiCheatPlayer {
     }
 
     private void handleBlockBreak(PlayerBlockActionData data, PlayerAuthInputPacket packet) {
-//        System.out.println(packet.getPlayerActions());
         // ignore sword block breaking actions when in creative
         if (this.serverPlayer.getInventory() == null ||
             (this.serverPlayer.getInventory().getItemInMainHand().isSword() &&
@@ -207,7 +206,6 @@ public class AntiCheatPlayer {
             this.plugin.getMainConfig().getMaxBlockBreakDistanceCreative() :
             this.plugin.getMainConfig().getMaxBlockBreakDistance();
         final float distance = this.distance(blockPos);
-//        System.out.println("distance: " + distance + ", max: " + maxDistance);
         if (distance > maxDistance) {
             this.sendDestroyCorrection(blockPos);
             final float inappropriateDistance = maxDistance * 1.5f;
@@ -220,8 +218,8 @@ public class AntiCheatPlayer {
             }
             return;
         }
-        this.handleBlockIntentChange(blockPos, data.getFace(), packet);
-        switch (data.getAction()) {
+        this.handleBlockIntentChange(blockPos, data.getFacing(), packet);
+        switch (data.getPlayerActionType()) {
             case START_DESTROY_BLOCK -> this.startDestroyBlock(data, packet);
             case CONTINUE_DESTROY_BLOCK -> this.continueDestroyBlock(data, packet);
             case PREDICT_DESTROY_BLOCK -> this.predictDestroyBlock(data, packet);
@@ -231,7 +229,7 @@ public class AntiCheatPlayer {
     }
 
     private void startDestroyBlock(PlayerBlockActionData data, PlayerAuthInputPacket packet) {
-        this.startDestroyBlock(data.getBlockPosition(), data.getFace(), packet);
+        this.startDestroyBlock(data.getBlockPosition(), data.getFacing(), packet);
     }
 
     private void startDestroyBlock(Vector3i blockPos, int face, PlayerAuthInputPacket packet) {
@@ -325,7 +323,7 @@ public class AntiCheatPlayer {
      */
     private void continueDestroyBlock(PlayerBlockActionData data, PlayerAuthInputPacket packet) {
         if (this.lastPlayerBlockAction != null &&
-            this.lastPlayerBlockAction.getAction()
+            this.lastPlayerBlockAction.getPlayerActionType()
                 .equals(PlayerActionType.PREDICT_DESTROY_BLOCK)) {
             //  this.resetBlockDestructionData();
             this.startDestroyBlock(data, packet);
@@ -355,9 +353,6 @@ public class AntiCheatPlayer {
             );
         }
         if (this.destroyTicks >= breakTime) {
-            /*System.out.println(
-                "Break block server authoritatively " + this.intendedToBreakBlock.asBlockVector3()
-            );*/
             this.breakBlock(
                 this.intendedToBreakBlock.asBlockVector3(), this.intendedToBreakBlockFace
             );
@@ -381,9 +376,7 @@ public class AntiCheatPlayer {
             this.sendDestroyCorrection(this.getLevel().getBlock(pos));
             return;
         }
-        /*System.out.println("frames: " + frames);
-        System.out.println("serverPredictedBreakTime: " + serverPredictedBreakTime);*/
-        this.breakBlock(pos.asBlockVector3(), BlockFace.fromIndex(data.getFace()));
+        this.breakBlock(pos.asBlockVector3(), BlockFace.fromIndex(data.getFacing()));
     }
 
     private void breakBlock(BlockVector3 blockPos, BlockFace face) {
@@ -488,10 +481,10 @@ public class AntiCheatPlayer {
             final boolean canBreak = breakTime -
                 (this.plugin.getServer().getTick() - this.clientStartedBreakTick) <= 1;
             if (canBreak &&
-                lastAction.getAction().equals(PlayerActionType.START_DESTROY_BLOCK)) {
+                lastAction.getPlayerActionType().equals(PlayerActionType.START_DESTROY_BLOCK)) {
                 this.breakBlock(
                     lastBreakPos,
-                    BlockFace.fromIndex(lastAction.getFace())
+                    BlockFace.fromIndex(lastAction.getFacing())
                 );
             }
             this.abortDestroyBlock(lastBreakPos.toNetwork());

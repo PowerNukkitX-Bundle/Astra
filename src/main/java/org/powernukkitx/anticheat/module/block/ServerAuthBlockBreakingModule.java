@@ -37,11 +37,12 @@ public class ServerAuthBlockBreakingModule extends Module {
         if (!(event.getPacket() instanceof PlayerAuthInputPacket packet)) {
             return;
         }
-        if (packet.getPlayerActions().isEmpty()) {
+        if (packet.getPlayerBlockActions().isEmpty()) {
             return;
         }
-        final List<PlayerBlockActionData> playerActions = packet.getPlayerActions();
-        if (playerActions.stream().noneMatch(data -> BREAKING_ACTIONS.contains(data.getAction()))) {
+        final List<PlayerBlockActionData> playerActions = packet.getPlayerBlockActions();
+        if (playerActions.stream()
+            .noneMatch(data -> BREAKING_ACTIONS.contains(data.getPlayerActionType()))) {
             return;
         }
         final Optional<AntiCheatPlayer> optional = this.plugin.getPlayerRegistry().getPlayer(
